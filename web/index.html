@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Procurement contract liability and third-party protection intelligence."
+    />
+    <meta name="theme-color" content="#070707" />
+    <title>Procurement Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="Procurement Intelligence home">
+        <span class="brand-mark">PI</span>
+        <span>Procurement Intelligence</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#workspace">Workspace</a>
+        <a href="#architecture">Architecture</a>
+        <button class="text-button" id="settingsButton" type="button">API settings</button>
+      </nav>
+      <div class="system-status" id="systemStatus">
+        <span class="status-dot"></span>
+        <span>Checking service</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow"><span></span> Contract risk, resolved with evidence</div>
+        <h1>Turn procurement exposure into <em>negotiable language.</em></h1>
+        <p>
+          Independent risk agents inspect liability and third-party protection in parallel.
+          Every result is validated, reconciled, and delivered with corrected contract text.
+        </p>
+        <div class="hero-actions">
+          <a class="primary-button" href="#workspace">Analyze a contract</a>
+          <a class="secondary-button" href="#architecture">View control model</a>
+        </div>
+        <div class="trust-row">
+          <span>Schema validated</span>
+          <span>Baseline integrity</span>
+          <span>Independent evaluation</span>
+          <span>Auditable remediation</span>
+        </div>
+      </section>
+
+      <section class="workspace section-shell" id="workspace">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Analysis workspace</span>
+            <h2>Review the contract before it becomes exposure.</h2>
+          </div>
+          <div class="privacy-note">
+            <strong>Data notice</strong>
+            Submit only information approved for processing by your deployed environment.
+          </div>
+        </div>
+
+        <div class="workspace-grid">
+          <article class="panel input-panel">
+            <div class="panel-header">
+              <div>
+                <span class="panel-number">01</span>
+                <h3>Contract source</h3>
+              </div>
+              <span class="character-count" id="characterCount">0 characters</span>
+            </div>
+
+            <div class="input-tabs" role="tablist" aria-label="Contract input method">
+              <button class="input-tab active" type="button" data-tab="paste">Paste text</button>
+              <button class="input-tab" type="button" data-tab="upload">Upload file</button>
+            </div>
+
+            <div class="tab-pane active" id="pastePane">
+              <label class="sr-only" for="contractText">Procurement contract text</label>
+              <textarea
+                id="contractText"
+                minlength="100"
+                maxlength="100000"
+                placeholder="Paste the complete procurement agreement here..."
+                spellcheck="false"
+              ></textarea>
+            </div>
+
+            <div class="tab-pane" id="uploadPane">
+              <label class="upload-zone" for="contractFile" id="uploadZone">
+                <span class="upload-icon">+</span>
+                <strong>Choose a text contract</strong>
+                <span>TXT and MD files up to 100,000 characters</span>
+              </label>
+              <input id="contractFile" type="file" accept=".txt,.md,text/plain,text/markdown" hidden />
+            </div>
+
+            <div class="sample-row">
+              <span>Start with a sample</span>
+              <button type="button" class="sample-button" id="sampleButton">
+                Load high-risk agreement
+              </button>
+            </div>
+
+            <div class="input-footer">
+              <button type="button" class="clear-button" id="clearButton">Clear</button>
+              <button type="button" class="analyze-button" id="analyzeButton">
+                <span>Run contract analysis</span>
+                <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+          </article>
+
+          <article class="panel result-panel" aria-live="polite">
+            <div class="panel-header">
+              <div>
+                <span class="panel-number">02</span>
+                <h3>Risk resolution</h3>
+              </div>
+              <span class="analysis-id" id="analysisId">Awaiting contract</span>
+            </div>
+
+            <div class="empty-result" id="emptyResult">
+              <div class="signal-visual">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <h4>Your analysis will appear here</h4>
+              <p>
+                Financial liability and third-party protection are evaluated independently,
+                then reconciled against the original contract baseline.
+              </p>
+            </div>
+
+            <div class="loading-result hidden" id="loadingResult">
+              <div class="loading-orbit"><span></span></div>
+              <h4>Independent agents are evaluating the contract</h4>
+              <div class="processing-list">
+                <div class="processing-step active"><span></span> Financial liability review</div>
+                <div class="processing-step active"><span></span> Third-party protection review</div>
+                <div class="processing-step"><span></span> Integrity synthesis</div>
+                <div class="processing-step"><span></span> Clause remediation</div>
+              </div>
+            </div>
+
+            <div class="error-result hidden" id="errorResult">
+              <span class="error-code">Analysis interrupted</span>
+              <h4 id="errorTitle">The service could not complete this review.</h4>
+              <p id="errorMessage"></p>
+              <button type="button" class="secondary-button" id="retryButton">Retry analysis</button>
+            </div>
+
+            <div class="results hidden" id="results">
+              <div class="score-strip">
+                <div class="score">
+                  <span id="riskScore">0</span>
+                  <small>risk index</small>
+                </div>
+                <div class="score-copy">
+                  <span class="risk-label" id="riskLabel">Assessment complete</span>
+                  <strong id="riskHeadline">Contract risk reviewed</strong>
+                  <p id="riskSummary">Validated findings and remediation are ready.</p>
+                </div>
+                <div class="integrity-badge">
+                  <span>✓</span>
+                  Baseline verified
+                </div>
+              </div>
+
+              <div class="result-tabs" role="tablist" aria-label="Analysis results">
+                <button class="result-tab active" type="button" data-result="findings">Findings</button>
+                <button class="result-tab" type="button" data-result="corrected">Corrected text</button>
+                <button class="result-tab" type="button" data-result="audit">Audit</button>
+              </div>
+
+              <div class="result-pane active" id="findingsResult">
+                <div class="finding-group">
+                  <div class="finding-group-header">
+                    <h4>Financial liability</h4>
+                    <span id="liabilityCount">0 findings</span>
+                  </div>
+                  <div id="liabilityFindings"></div>
+                </div>
+                <div class="finding-group">
+                  <div class="finding-group-header">
+                    <h4>Third-party protection</h4>
+                    <span id="indemnityCount">0 findings</span>
+                  </div>
+                  <div id="indemnityFindings"></div>
+                </div>
+              </div>
+
+              <div class="result-pane" id="correctedResult">
+                <div class="document-toolbar">
+                  <span>Remediated contract</span>
+                  <div>
+                    <button type="button" id="copyButton">Copy</button>
+                    <button type="button" id="downloadButton">Download</button>
+                  </div>
+                </div>
+                <pre id="correctedText"></pre>
+              </div>
+
+              <div class="result-pane" id="auditResult">
+                <dl class="audit-grid">
+                  <div><dt>Contract ID</dt><dd id="auditContractId">—</dd></div>
+                  <div><dt>Completed</dt><dd id="auditCompleted">—</dd></div>
+                  <div><dt>Processing drift</dt><dd id="auditDrift">—</dd></div>
+                  <div><dt>Baseline integrity</dt><dd id="auditIntegrity">—</dd></div>
+                </dl>
+                <div class="changes-block">
+                  <h4>Changes applied</h4>
+                  <ul id="changesApplied"></ul>
+                </div>
+                <div class="review-note">
+                  <strong>Review note</strong>
+                  <p id="legalReviewNotes"></p>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="architecture section-shell" id="architecture">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Control model</span>
+            <h2>No central decision-maker. Every stage proves its work.</h2>
+          </div>
+          <p class="architecture-intro">
+            Components communicate only through immutable, schema-validated events. Evaluation
+            domains remain isolated while synthesis enforces timing and baseline integrity.
+          </p>
+        </div>
+        <div class="architecture-grid">
+          <article>
+            <span>01</span>
+            <h3>Independent inspection</h3>
+            <p>Liability and indemnity agents subscribe separately and execute concurrently.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Validated synthesis</h3>
+            <p>The gate accepts results only when contract IDs and baseline hashes agree.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Triggered remediation</h3>
+            <p>The correction worker reacts to synthesized evidence, never to an API command.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Auditable output</h3>
+            <p>Timing drift, applied changes, findings, and corrected language travel together.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Procurement Intelligence</span>
+      <p>Decision support for procurement review. Final legal approval remains with counsel.</p>
+      <span>© 2026 AYE5HA</span>
+    </footer>
+
+    <dialog id="settingsDialog">
+      <form method="dialog">
+        <div class="dialog-header">
+          <div>
+            <span class="section-kicker">Connection</span>
+            <h3>API settings</h3>
+          </div>
+          <button class="dialog-close" value="cancel" aria-label="Close settings">×</button>
+        </div>
+        <label>
+          API base URL
+          <input id="apiUrlInput" type="url" placeholder="https://api.example.com" />
+        </label>
+        <label>
+          Access token <span>Optional</span>
+          <input id="apiTokenInput" type="password" autocomplete="off" />
+        </label>
+        <p class="dialog-note">
+          The token is stored only for this browser session and is never included in exports.
+        </p>
+        <button class="analyze-button" id="saveSettingsButton" value="default">Save connection</button>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
