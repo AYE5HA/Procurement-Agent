@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "procurement-contract-intelligence"
+version = "1.0.0"
+description = "Event-driven procurement contract analysis and remediation"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+  "azure-ai-inference==1.0.0b9",
+  "fastapi==0.115.12",
+  "pydantic==2.11.5",
+  "pydantic-settings==2.9.1",
+  "python-dotenv==1.1.0",
+  "uvicorn[standard]==0.34.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx==0.28.1",
+  "pytest==8.4.0",
+  "pytest-asyncio==1.0.0",
+  "ruff==0.11.13",
+]
+
+[tool.setuptools.packages.find]
+include = ["procurement_agent*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

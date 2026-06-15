@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      ENVIRONMENT: production
+      ANALYSIS_PROVIDER: azure
+      DATABASE_URL: sqlite:////app/data/procurement_agent.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - procurement-data:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  procurement-data:
