@@ -1,36 +1,75 @@
 # Procurement Contract Intelligence
 
-Production-oriented contract risk analysis for procurement teams. The service evaluates financial liability and third-party intellectual property protection concurrently, validates every event against strict schemas, verifies contract baseline integrity, and produces a corrected contract through an autonomous remediation worker.
+Event-driven contract risk analysis for procurement teams. The service concurrently evaluates financial liability gaps and third-party IP indemnity loopholes, validates every inter-component message against strict Pydantic schemas, verifies contract baseline integrity across the full processing window, and produces a corrected contract through an autonomous remediation worker — without a central orchestrator directing any of it.
 
-## Architecture
+---
 
-The pipeline uses event-driven choreography rather than request-time orchestration:
+## How it works
 
-1. The API validates and publishes `contract.submitted`.
-2. Independent liability and indemnity workers receive the same immutable event concurrently.
-3. The synthesis gate waits for both validated outputs and verifies contract ID, baseline hash, and processing drift.
-4. The remediation worker self-triggers from `evaluation.synthesized`.
-5. The API receives the final `contract.remediated` event through contract-scoped correlation.
+The pipeline is choreographed, not orchestrated. No single component acts as a manager.
 
-The evaluation workers do not import or call one another. The remediation worker is never called by the API.
+```
+POST /analyze
+      │
+      ▼
+ContractIngestionAdapter          validates payload, stamps ContractSubmitted event
+      │
+      ├──────────────────────────────────────┐
+      ▼                                      ▼
+FinancialLiabilityWorker          IPIndemnityWorker
+  (concurrent, isolated)            (concurrent, isolated)
+  publishes LiabilityEvaluated      publishes IndemnityEvaluated
+      │                                      │
+      └──────────────┬───────────────────────┘
+                     ▼
+             SynthesisGate
+  waits for both events · verifies baseline hash · checks processing drift
+  self-fires EvaluationSynthesized when gate clears
+                     │
+                     ▼
+         ClauseRemediationWorker
+  triggered by event, not by the API
+  publishes ContractRemediated
+                     │
+                     ▼
+             API response
+```
 
-## Local Development
+The two evaluation workers share no imports and make no calls to each other. The remediation worker is never invoked by the API. The synthesis gate transitions purely on the arrival of both upstream events and rejects synthesis if the contract's baseline hash has changed or if processing drift exceeds the configured threshold.
+
+---
+
+## Requirements
+
+- Python 3.11 or 3.12
+- An [Azure AI Foundry](https://ai.azure.com) project with a deployed model (GPT-4o recommended)
+- Docker and Docker Compose (for containerised runs)
+
+---
+
+## Local development
 
 ```bash
 cp .env.example .env
+# Fill in AZURE_AI_FOUNDRY_ENDPOINT, AZURE_AI_FOUNDRY_API_KEY, FOUNDRY_MODEL_NAME
+
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
+
 uvicorn procurement_agent.api:create_app --factory --reload
 ```
 
-On Windows, activate the environment with `.venv\Scripts\Activate.ps1`.
-
-Open `web/index.html` through a local static server:
+Serve the frontend:
 
 ```bash
 python -m http.server 3000 --directory web
 ```
+
+API: `http://localhost:8000`  
+Frontend: `http://localhost:3000`
+
+---
 
 ## Docker
 
@@ -38,42 +77,61 @@ python -m http.server 3000 --directory web
 docker compose up --build
 ```
 
-The API is available on `http://localhost:8000`; the frontend is available on `http://localhost:3000`.
+The compose file expects credentials via `.env`. Copy `.env.example` first and fill in your Foundry details before building.
+
+---
 
 ## Configuration
 
-Copy `.env.example` to `.env` and provide the endpoint, API key, and deployed model name
-from Microsoft Foundry. Foundry is the required runtime provider and the service refuses to
-start with missing or placeholder credentials. The deterministic engine is reserved for automated
-tests and must be selected explicitly.
-
 | Variable | Purpose |
-| --- | --- |
-| `ANALYSIS_PROVIDER` | `azure` for runtime; `deterministic` is test-only |
-| `AZURE_AI_FOUNDRY_ENDPOINT` | Azure AI model endpoint |
-| `AZURE_AI_FOUNDRY_API_KEY` | Azure AI credential |
-| `FOUNDRY_MODEL_NAME` | Deployed model name |
-| `DATABASE_URL` | SQLite URL for persisted analyses |
-| `CORS_ORIGINS` | Comma-separated trusted frontend origins |
-| `API_ACCESS_KEY` | Optional bearer token for API access |
-| `RATE_LIMIT_REQUESTS` | Requests allowed per window |
-| `RATE_LIMIT_WINDOW_SECONDS` | Rate-limit window |
-| `MAX_CONTRACT_CHARACTERS` | Maximum accepted contract length |
-| `MAX_PROCESSING_DRIFT_SECONDS` | Baseline-to-remediation timing limit |
+|---|---|
+| `ANALYSIS_PROVIDER` | `azure` for runtime; `deterministic` for automated tests only |
+| `AZURE_AI_FOUNDRY_ENDPOINT` | Azure AI Foundry model endpoint |
+| `AZURE_AI_FOUNDRY_API_KEY` | Azure AI Foundry credential |
+| `FOUNDRY_MODEL_NAME` | Deployed model name (e.g. `gpt-4o`) |
+| `DATABASE_URL` | SQLite connection string for persisted analyses |
+| `CORS_ORIGINS` | Comma-separated allowed frontend origins |
+| `API_ACCESS_KEY` | Optional bearer token; omit to disable auth |
+| `RATE_LIMIT_REQUESTS` | Maximum requests per rate-limit window |
+| `RATE_LIMIT_WINDOW_SECONDS` | Duration of the rate-limit window |
+| `MAX_CONTRACT_CHARACTERS` | Hard ceiling on accepted contract length |
+| `MAX_PROCESSING_DRIFT_SECONDS` | Maximum allowed gap between contract submission and synthesis; requests exceeding this are rejected |
+| `ANALYSIS_TIMEOUT_SECONDS` | Per-worker inference timeout |
 
-For GitHub Pages, set `window.PROCUREMENT_AGENT_CONFIG.apiBaseUrl` in `web/config.js` to the deployed API URL.
+The service refuses to start if `ANALYSIS_PROVIDER=azure` and any of the three Foundry credentials are absent or left at their placeholder values. The `deterministic` provider bypasses all Azure calls and is intended exclusively for the test suite.
 
-## Quality
+To deploy the frontend to GitHub Pages, set `window.PROCUREMENT_AGENT_CONFIG.apiBaseUrl` in `web/config.js` to your deployed API URL.
+
+---
+
+## Testing and linting
 
 ```bash
 ruff check .
 pytest
 ```
 
-## Responsible Use
+The test suite uses the `deterministic` provider and does not require Foundry credentials. Tests cover event fan-out, baseline hash integrity, drift rejection, and end-to-end remediation flow.
 
-This system supports contract review but does not replace qualified legal counsel. Generated language must be reviewed before execution. Do not submit contracts containing regulated or confidential information unless the deployed environment and data-handling controls are approved for that information.
+---
+
+## Project layout
+
+```
+procurement_agent/   core package (API, workers, gate, schemas, bus)
+tests/               pytest suite; uses deterministic analysis provider
+web/                 static frontend (HTML/CSS/JS)
+deploy/              nginx config for Docker frontend service
+```
+
+---
+
+## Responsible use
+
+This system supports contract review. It does not replace qualified legal counsel. All generated language must be reviewed by a legal professional before execution. Do not submit contracts containing regulated, confidential, or personally identifiable information unless the deployment environment and its data-handling controls have been assessed and approved for that information class.
+
+---
 
 ## License
 
-Licensed under the MIT License.
+MIT
