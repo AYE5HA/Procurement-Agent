@@ -60,22 +60,9 @@ pip install -e ".[dev]"
 uvicorn procurement_agent.api:create_app --factory --reload
 ```
 
-Serve the frontend:
 
-```bash
-python -m http.server 3000 --directory web
-```
 
-API: `http://localhost:8000`  
-Frontend: `http://localhost:3000`
 
----
-
-## Docker
-
-```bash
-docker compose up --build
-```
 
 The compose file expects credentials via `.env`. Copy `.env.example` first and fill in your Foundry details before building.
 
